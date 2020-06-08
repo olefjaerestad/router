@@ -1,0 +1,31 @@
+{
+  "author": "Ole Kristian Fjærestad",
+  "bugs": {
+    "url": "https://github.com/olefjaerestad/router/issues"
+  },
+  "description": "Lightweight Javascript router to run certain functions at certain routes.",
+  "devDependencies": {
+    "@types/cypress": "^1.1.3",
+    "cypress": "^4.7.0",
+    "typescript": "^3.9.5"
+  },
+  "homepage": "https://github.com/olefjaerestad/router#readme",
+  "keywords": [
+    "router"
+  ],
+  "license": "MIT",
+  "main": "build/router.js",
+  "name": "@olefjaerestad/router",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/olefjaerestad/router.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch --noEmit",
+    "publish:npm": "npm run build && npm publish --access public",
+    "test:browsers": "cypress open"
+  },
+  "type": "module",
+  "version": "0.0.1"
+}
