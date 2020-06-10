@@ -1,5 +1,5 @@
 # Router
-Lightweight Javascript router to run certain functions at certain routes.
+Lightweight Javascript router to run certain functions at certain URL routes.
 
 ## Installation
 ```bash
@@ -65,3 +65,6 @@ npm run publish:npm
 - Get `async callbacks` test to pass.
 - Make `this` available inside callbacks.
 - Router constructor should take an html element (to use as the router outlet).
+- Add support for route middleware (e.g. to change req, prevent callback, etc).
+- Add some way of handling route transitions (e.g. fade from A to B).
+- Improve documentation, both inline in code and in readme.
