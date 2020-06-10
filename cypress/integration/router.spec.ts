@@ -30,7 +30,7 @@ describe('Router', () => {
 			resolvedValue = await getPromise();
 		});
 		router.navigate('/shop');
-		cy.get(resolvedValue).should(val => expect(resolvedValue).to.equal(text));
+		cy.wrap(resolvedValue).should(val => expect(resolvedValue).to.equal(text));
 	});
 	it('Should support (multiple) route params.', () => {
 		let slug;
