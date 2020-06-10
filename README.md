@@ -62,7 +62,6 @@ npm run publish:npm
 > Note: requires being [logged in to npm locally](https://docs.npmjs.com/cli/adduser).
 
 ## TODOs (prioritized order)
-- Get `async callbacks` test to pass.
 - Make `this` available inside callbacks.
 - Router constructor should take an html element (to use as the router outlet).
 - Add support for route middleware (e.g. to change req, prevent callback, etc).

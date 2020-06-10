@@ -18,25 +18,19 @@ describe('Router', () => {
 		router.navigate('/about');
 		expect(changedByRouter).to.be.false;
 	});
-	// TODO: this doesn't pass.
 	it('Should support async callbacks.', () => {
-		const text = 'I am the resolved value!';
-		const getPromise = () => {
+		const getPromise = (): Promise<string> => {
 			return new Promise((resolve, reject) => {
-				setTimeout(() => resolve(text), 1000);
+				setTimeout(() => resolve(text), 500);
 			});
 		}
-		let resolvedValue: any = 'hey';
+		const text = 'I am the resolved value!';
+		let resolvedValue: string = 'I am the original value';
 		router.get('/shop', async () => {
-			// console.log('inside: before');
 			resolvedValue = await getPromise();
-			// console.log('inside: after');
-			// expect(resolvedValue).to.equal('ewfre');
 		});
-		// console.log('outside: before');
 		router.navigate('/shop');
-		// console.log('outside: after');
-		expect(resolvedValue).to.equal(text);
+		cy.get(resolvedValue).should(val => expect(resolvedValue).to.equal(text));
 	});
 	it('Should support (multiple) route params.', () => {
 		let slug;
