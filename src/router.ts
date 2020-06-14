@@ -18,6 +18,18 @@ interface IRouterRouteParamKey {
 	pattern: null|string,
 }
 
+/* const asyncForeach = async(promises: Array<Promise<any>>, callback: (promise: Promise<any>) => unknown) => {
+	for (let i = 0; i < promises.length; ++i) {
+		const promise = promises[i];
+		await callback(promise);
+	}
+} */
+
+// asyncForeach(route.middleware, (promise) => {
+// 	await promise;
+
+// })
+
 /**
  * @description Handles SPA routing. Supports express style routing (with params).
  * 
@@ -107,10 +119,27 @@ export class Router {
 				}, {});
 				// Run corresponding callback then return true to break the loop. TODO: Run middleware before callback.
 				if (registeredRoute && this.routes[registeredRoute]) {
-					this.routes[registeredRoute].callback({
+					// let middlewareReturnedFalse = false;
+
+					const req = {
 						route,
 						params: routeParamsObj
+					};
+					// TODO: Support async middleware. Middleware should be able to stop further execution and modify the req object.
+					// console.log(this.routes[registeredRoute].callback);
+					let middlewareReturnedFalse = this.routes[registeredRoute].middleware.some(mw => {
+						// console.log('res', mw(req) === false);
+						return mw(req) === false;
 					});
+					/* asyncForeach(this.routes[registeredRoute].middleware, promise => {
+						const value = await promise();
+						middlewareReturnedFalse = value === false;
+					}); */
+					// console.log(middlewareReturnedFalse);
+
+					if (!middlewareReturnedFalse) {
+						this.routes[registeredRoute].callback(req);
+					}
 				}
 				return true;
 			}
@@ -137,7 +166,7 @@ export class Router {
 		delete this.routes[route];
 	}
 
-	/** Register route. `Router.get('/home', myMiddleware1, myMiddleware2, myCallback)`. Return false in middleware to stop execution. Middleware and callback can be async, and must not be arrow functions if you want to have access to the Router instance as `this` within them. */
+	/** Register route. `Router.get('/home', myMiddleware1, myMiddleware2, myCallback)`. Explicitly return false in middleware to stop execution. Middleware and callback can be async, and must not be arrow functions if you want to have access to the Router instance as `this` within them. */
 	// get(route: string, callback: (req?: {route: string, params: {[key: string]: string}}) => unknown): void {
 	// 	this.routes[route] = callback.bind(this);
 	// }

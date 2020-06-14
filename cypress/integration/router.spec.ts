@@ -69,4 +69,40 @@ describe('Router', () => {
 		router.navigate('/this');
 		expect(thisIsRouter).to.be.true;
 	});
+	it('Middleware should be able to stop the execution of the route callback.', () => {
+		let changedByRouter = false;
+		const middleware = () => {
+			return false;
+		}
+		router.get('/middleware', middleware, () => changedByRouter = true);
+		router.navigate('/middleware');
+		expect(changedByRouter).to.be.false;
+	});
+	it('Middleware should be able to stop the execution of further middleware.', () => {
+		let changedByRouter = false;
+		const middleware1 = () => false;
+		const middleware2 = () => changedByRouter = true;
+		router.get('/middlewarestop', middleware1, middleware2, () => null);
+		router.navigate('/middlewarestop');
+		expect(changedByRouter).to.be.false;
+	});
+	it('Should support async middleware.', () => {
+		const getPromise = (): Promise<string> => {
+			return new Promise((resolve, reject) => {
+				setTimeout(() => resolve(text), 500);
+			});
+		}
+		const middleware = async () => {
+			return false;
+			// const result = await getPromise();
+			// console.log('result', result, result !== text);
+			// return result !== text;
+		};
+		const text = 'I am the resolved value!';
+		let changedByRouter = false;
+		router.get('/asyncmiddleware', middleware, () => changedByRouter = true);
+		router.navigate('/asyncmiddleware');
+		cy.wrap(changedByRouter).should(val => expect(changedByRouter).to.be.false);
+		// expect(changedByRouter).to.be.false;
+	});
 });

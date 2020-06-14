@@ -62,9 +62,10 @@ npm run publish:npm
 > Note: requires being [logged in to npm locally](https://docs.npmjs.com/cli/adduser).
 
 ## TODOs (prioritized order)
+- Do we need to split up route middleware and callback? Maybe just have one array of callbacks instead?
 - Add some way of handling route transitions (e.g. fade from A to B).
 - Improve documentation, both inline in code and in readme (e.g. add typescript specifics).
 - Improve examples in code.
 
 ## In progress
-- Add support for route middleware (e.g. to change req, prevent callback, etc).
+- Add support for async route middleware (e.g. to change req, prevent callback, etc).
