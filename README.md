@@ -62,8 +62,9 @@ npm run publish:npm
 > Note: requires being [logged in to npm locally](https://docs.npmjs.com/cli/adduser).
 
 ## TODOs (prioritized order)
-- Make `this` available inside callbacks.
-- Router constructor should take an html element (to use as the router outlet).
-- Add support for route middleware (e.g. to change req, prevent callback, etc).
 - Add some way of handling route transitions (e.g. fade from A to B).
-- Improve documentation, both inline in code and in readme.
+- Improve documentation, both inline in code and in readme (e.g. add typescript specifics).
+- Improve examples in code.
+
+## In progress
+- Add support for route middleware (e.g. to change req, prevent callback, etc).

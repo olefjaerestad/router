@@ -63,4 +63,10 @@ describe('Router', () => {
 		anchor.click();
 		expect(anchorTriggeredRouter).to.be.false;
 	});
+	it('The Router instance should be available as `this` within non-arrow callbacks.', () => {
+		let thisIsRouter = false;
+		router.get('/this', function() {thisIsRouter = this instanceof Router});
+		router.navigate('/this');
+		expect(thisIsRouter).to.be.true;
+	});
 });
