@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-import { Router } from '../../src/router';
+import { Router, IRouterCallback } from '../../src/router';
 
 const router = new Router();
 
@@ -71,20 +71,25 @@ describe('Router', () => {
 	});
 	it('Middleware should be able to stop the execution of the route callback.', () => {
 		let changedByRouter = false;
-		const middleware = () => {
-			return false;
-		}
+		const middleware: IRouterCallback = () => false;
 		router.get('/middleware', middleware, () => changedByRouter = true);
 		router.navigate('/middleware');
-		expect(changedByRouter).to.be.false;
+		cy.wrap(changedByRouter).should(val => expect(changedByRouter).to.be.false);
 	});
 	it('Middleware should be able to stop the execution of further middleware.', () => {
 		let changedByRouter = false;
-		const middleware1 = () => false;
-		const middleware2 = () => changedByRouter = true;
+		const middleware1: IRouterCallback = () => false;
+		const middleware2: IRouterCallback = () => changedByRouter = true;
 		router.get('/middlewarestop', middleware1, middleware2, () => null);
 		router.navigate('/middlewarestop');
-		expect(changedByRouter).to.be.false;
+		cy.wrap(changedByRouter).should(val => expect(changedByRouter).to.be.false);
+	});
+	it('Middleware should be able to modify the req object.', () => {
+		let changedByRouter = false;
+		const middleware: IRouterCallback = (req) => req.custom = 'foo';
+		router.get('/middlewaremodifyreq', middleware, (req) => req.custom === 'foo' ? changedByRouter = true : null);
+		router.navigate('/middlewaremodifyreq');
+		cy.wrap(changedByRouter).should(val => expect(changedByRouter).to.be.true);
 	});
 	it('Should support async middleware.', () => {
 		const getPromise = (): Promise<string> => {
@@ -92,17 +97,11 @@ describe('Router', () => {
 				setTimeout(() => resolve(text), 500);
 			});
 		}
-		const middleware = async () => {
-			return false;
-			// const result = await getPromise();
-			// console.log('result', result, result !== text);
-			// return result !== text;
-		};
+		const middleware: IRouterCallback = async () => await getPromise() === text;
 		const text = 'I am the resolved value!';
 		let changedByRouter = false;
 		router.get('/asyncmiddleware', middleware, () => changedByRouter = true);
 		router.navigate('/asyncmiddleware');
-		cy.wrap(changedByRouter).should(val => expect(changedByRouter).to.be.false);
-		// expect(changedByRouter).to.be.false;
+		cy.wrap(changedByRouter).should(val => expect(changedByRouter).to.be.true);
 	});
 });

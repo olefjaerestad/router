@@ -1,12 +1,18 @@
 import {pathToRegexp} from './path-to-regexp';
 
 export interface IRouterCallback {
-	(req?: {route: string, params: {[key: string]: string|number}}): unknown
+	(req?: {
+		[key: string]: any,
+		route: string, 
+		params: {
+			[key: string]: string|number
+		},
+	}): unknown
 }
 
 interface IRouterCallbackObject {
-	callback: IRouterCallback,
-	middleware: Array<IRouterCallback>,
+	/** Treat middleware and callback as the same */
+	callbacks: Array<IRouterCallback>,
 }
 
 interface IRouterRouteParamKey {
@@ -18,17 +24,19 @@ interface IRouterRouteParamKey {
 	pattern: null|string,
 }
 
-/* const asyncForeach = async(promises: Array<Promise<any>>, callback: (promise: Promise<any>) => unknown) => {
-	for (let i = 0; i < promises.length; ++i) {
-		const promise = promises[i];
-		await callback(promise);
+/**
+ * Loop through and call functions asynchronously.
+ * Function calls will wait until previous function has resolved.
+ * If a function returns false, looping will stop (i.e. break).
+ */
+const foreachAsyncCall = async(items: Array<Function>, callback: (i: number, item: any) => unknown) => {
+	for (let i = 0; i < items.length; ++i) {
+		const result = await callback(i, items[i]);
+		if (result === false) {
+			break;
+		}
 	}
-} */
-
-// asyncForeach(route.middleware, (promise) => {
-// 	await promise;
-
-// })
+}
 
 /**
  * @description Handles SPA routing. Supports express style routing (with params).
@@ -117,29 +125,13 @@ export class Router {
 					accumulator[val.key] = val.value;
      			return accumulator;
 				}, {});
-				// Run corresponding callback then return true to break the loop. TODO: Run middleware before callback.
+				// Run corresponding callbacks then return true to break the loop.
 				if (registeredRoute && this.routes[registeredRoute]) {
-					// let middlewareReturnedFalse = false;
-
 					const req = {
 						route,
 						params: routeParamsObj
 					};
-					// TODO: Support async middleware. Middleware should be able to stop further execution and modify the req object.
-					// console.log(this.routes[registeredRoute].callback);
-					let middlewareReturnedFalse = this.routes[registeredRoute].middleware.some(mw => {
-						// console.log('res', mw(req) === false);
-						return mw(req) === false;
-					});
-					/* asyncForeach(this.routes[registeredRoute].middleware, promise => {
-						const value = await promise();
-						middlewareReturnedFalse = value === false;
-					}); */
-					// console.log(middlewareReturnedFalse);
-
-					if (!middlewareReturnedFalse) {
-						this.routes[registeredRoute].callback(req);
-					}
+					foreachAsyncCall(this.routes[registeredRoute].callbacks, async (i, callback) => await callback(req));
 				}
 				return true;
 			}
@@ -148,10 +140,10 @@ export class Router {
 		});
 		
 		if (!hasMatchingRoute && !!this.routes['/404']) {
-			this.routes['/404'].callback({
+			foreachAsyncCall(this.routes['/404'].callbacks, async (i, callback) => await callback({
 				route,
 				params: {}
-			});
+			}));
 		}
 	}
 
@@ -167,15 +159,9 @@ export class Router {
 	}
 
 	/** Register route. `Router.get('/home', myMiddleware1, myMiddleware2, myCallback)`. Explicitly return false in middleware to stop execution. Middleware and callback can be async, and must not be arrow functions if you want to have access to the Router instance as `this` within them. */
-	// get(route: string, callback: (req?: {route: string, params: {[key: string]: string}}) => unknown): void {
-	// 	this.routes[route] = callback.bind(this);
-	// }
 	get(route: string, ...middlewareAndCallback: Array<IRouterCallback>): void {
-		const callback = middlewareAndCallback[middlewareAndCallback.length-1];
-		const middleware = middlewareAndCallback.slice(0, middlewareAndCallback.length-1).map(middleware => middleware.bind(this));
 		this.routes[route] = {
-			callback: callback.bind(this),
-			middleware,
+			callbacks: middlewareAndCallback.map(middleware => middleware.bind(this)),
 		}
 	}
 
