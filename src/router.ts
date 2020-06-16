@@ -50,16 +50,20 @@ const foreachAsyncCall = async(items: Array<Function>, callback: (i: number, ite
  * Ole Fjaerestad
  */
 export class Router {
+	static addedEventListeners: boolean;
 	/** Private. Current route. */
 	private currentRoute = '';
 	/** Private. Registered routes. */
 	private routes: {[key: string]: IRouterCallbackObject} = {};
 	/** Private. Add event listeners for popstate and router links `[router-href="/about"]`. */
 	private addEventListeners(): void {
+		if (Router.addedEventListeners) {
+			return;
+		}
 		this.handleRouterLinks = e => {
 			if (e.type === 'click' || (e.type === 'keyup' && e.key === 'Enter')) {
 				const target = e.path[0];
-				if ( target && target.closest('[router-href]:not([router-href=""])')) {
+				if (target && target.closest('[router-href]:not([router-href=""])')) {
 					event.preventDefault();
 					this.navigate(target.closest('[router-href]:not([router-href=""])').getAttribute('router-href'));
 				}
@@ -69,6 +73,7 @@ export class Router {
 		document.addEventListener('click', this.handleRouterLinks);
 		document.addEventListener('keyup', this.handleRouterLinks);
 		window.addEventListener('popstate', this.handlePopstate);
+		Router.addedEventListeners = true;
 	}
 	/** Private. Handle changes to browser URL. */
 	private handlePopstate: (event: PopStateEvent) => unknown;
@@ -155,6 +160,9 @@ export class Router {
 
 	/** Remove event listeners. For cleanup purposes. */
 	removeEventListeners(): void {
+		if (!Router.addedEventListeners) {
+			return;
+		}
 		document.removeEventListener('click', this.handleRouterLinks);
 		document.removeEventListener('keyup', this.handleRouterLinks);
 		window.removeEventListener('popstate', this.handlePopstate);

@@ -172,6 +172,5 @@ npm run publish:npm
 > Note: requires being [logged in to npm locally](https://docs.npmjs.com/cli/adduser).
 
 ## TODOs (prioritized order)
-- Avoid multiple event listeners when multiple routers.
 - Run Router.runRoute() in constructor?
 - Check that fallback 404 route works and add tests for it.

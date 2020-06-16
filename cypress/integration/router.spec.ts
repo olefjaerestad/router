@@ -53,6 +53,16 @@ describe('Router', () => {
 		anchor.click();
 		expect(anchorTriggeredRouter).to.be.true;
 	});
+	it('Avoid adding multiple identical event listeners when using multiple routers.', () => {
+		const router2 = new Router();
+		const anchor = document.createElement('a');
+		let anchorTriggeredRouter2 = false;
+		anchor.setAttribute('router-href', '/multiplelisteners');
+		document.body.append(anchor);
+		router.get('/multiplelisteners', () => anchorTriggeredRouter2 = !anchorTriggeredRouter2);
+		anchor.click();
+		expect(anchorTriggeredRouter2).to.be.true;
+	});
 	it('Should support removing event listeners.', () => {
 		const anchor = document.createElement('a');
 		let anchorTriggeredRouter = false;
