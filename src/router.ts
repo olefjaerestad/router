@@ -26,7 +26,7 @@ interface IRouterRouteParamKey {
 
 /**
  * Loop through and call functions asynchronously.
- * Function calls will wait until previous function has resolved.
+ * Function calls will wait until previous function has settled.
  * If a function returns false, looping will stop (i.e. break).
  */
 const foreachAsyncCall = async(items: Array<Function>, callback: (i: number, item: any) => unknown) => {
@@ -39,29 +39,12 @@ const foreachAsyncCall = async(items: Array<Function>, callback: (i: number, ite
 }
 
 /**
- * @description Handles SPA routing. Supports express style routing (with params).
+ * @description Handles client side routing. Supports express style routing (with params).
  * 
- * @method get - Takes n params: route (string) and n callback functions. All callback functions take a param `req` containg route and params properties, and must not be arrow function if you want to have access to the Router instance as `this` within it.
- * 
- * * @example
- *
- * <a href="" router-href="/type/pages">Pages</a> // Navigate to a new route.
- * 
- * @example
- * // Switch out the router outlets' html.
- * RouterOutlet.get('/type/:foo/:bar/hello', function(req) {
- *		const el = document.createElement('p');
- *		el.textContent = `route: ${req.route}, foo: ${req.params.foo}`;
- *		this.innerHTML = ''; // clear the contents of the router outlet
- *		this.appendChild(el); // add new content to the router outlet
- * });
- * 
- * @example 
- * // Async.
- * RouterOutlet.get('/type/:foo/:bar/hello', async function(req) {
- *		const resolvedPromise = await someAsyncFunction();
- *		console.log(resolvedPromise);
- * });
+ * @method get - Takes n params: route (string) and n middleware/callback functions. All callback functions take a param `req` containg route and params properties, and must not be arrow functions if you want to have access to the Router instance as `this` within it. The callbacks can be sync or async and can modify the req object or return false to stop further route execution.
+ * @method delete - Deletes a route. Takes a route (string) that has already been registered with .get().
+ * @method navigate - Takes a route (string) and navigates to that route.
+ * @method removeEventListeners - Router instances add event listeners to the window and document, so that e.g. `[router-href]` elements and browser back/forwards buttons can be used to navigate to routes. This method can be used for cleanup of these event listeners.
  * 
  * @author
  * Ole Fjaerestad
@@ -102,7 +85,6 @@ export class Router {
 
 		// Try to find matching route.
 		const hasMatchingRoute = Object.keys(this.routes).some(registeredRoute => {
-			// const routeParamKeys: Array<any> = [];
 			const routeParamKeys: Array<IRouterRouteParamKey> = [];
 			const regEx = pathToRegexp(registeredRoute, routeParamKeys);
 
@@ -138,7 +120,7 @@ export class Router {
 
 			return false;
 		});
-		
+		// No matching route, try a fallback.
 		if (!hasMatchingRoute && !!this.routes['/404']) {
 			foreachAsyncCall(this.routes['/404'].callbacks, async (i, callback) => await callback({
 				route,
@@ -171,7 +153,7 @@ export class Router {
 		this.runRoute(route);
 	}
 
-	/** Remove event listeners for cleanup purposes. */
+	/** Remove event listeners. For cleanup purposes. */
 	removeEventListeners(): void {
 		document.removeEventListener('click', this.handleRouterLinks);
 		document.removeEventListener('keyup', this.handleRouterLinks);

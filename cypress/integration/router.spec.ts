@@ -60,6 +60,7 @@ describe('Router', () => {
 		document.body.append(anchor);
 		router.get('/blog', () => anchorTriggeredRouter = true);
 		router.removeEventListeners();
+		anchor.addEventListener('click', e => e.preventDefault());
 		anchor.click();
 		expect(anchorTriggeredRouter).to.be.false;
 	});
