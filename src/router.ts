@@ -50,35 +50,36 @@ const foreachAsyncCall = async(items: Array<Function>, callback: (i: number, ite
  * Ole Fjaerestad
  */
 export class Router {
-	static addedEventListeners: boolean;
+	/** Static. Whether event listeners have been added or not. TODO: Maybe we don't need this. */
+	// static addedEventListeners: boolean;
 	/** Private. Current route. */
 	private currentRoute = '';
 	/** Private. Registered routes. */
 	private routes: {[key: string]: IRouterCallbackObject} = {};
 	/** Private. Add event listeners for popstate and router links `[router-href="/about"]`. */
 	private addEventListeners(): void {
-		if (Router.addedEventListeners) {
-			return;
-		}
-		this.handleRouterLinks = e => {
-			if (e.type === 'click' || (e.type === 'keyup' && e.key === 'Enter')) {
-				const target = e.path[0];
-				if (target && target.closest('[router-href]:not([router-href=""])')) {
-					event.preventDefault();
-					this.navigate(target.closest('[router-href]:not([router-href=""])').getAttribute('router-href'));
-				}
-			}
-		};
-		this.handlePopstate = e => this.runRoute();
+		// if (Router.addedEventListeners) {
+		// 	return;
+		// }
 		document.addEventListener('click', this.handleRouterLinks);
 		document.addEventListener('keyup', this.handleRouterLinks);
 		window.addEventListener('popstate', this.handlePopstate);
-		Router.addedEventListeners = true;
+		// Router.addedEventListeners = true;
 	}
 	/** Private. Handle changes to browser URL. */
-	private handlePopstate: (event: PopStateEvent) => unknown;
+	private handlePopstate = (event: PopStateEvent): any => {
+		this.runRoute();
+	};
 	/** Private. Handle clicks on router links `[router-href="/about"]`. */
-	private handleRouterLinks: (event: MouseEvent & KeyboardEvent & {path: Array<HTMLElement>}) => unknown;
+	private handleRouterLinks = (event: MouseEvent & KeyboardEvent & {path: Array<HTMLElement>}): any => {
+		if (event.type === 'click' || (event.type === 'keyup' && event.key === 'Enter')) {
+			const target = event.path[0];
+			if (target && target.closest('[router-href]:not([router-href=""])')) {
+				event.preventDefault();
+				this.navigate(target.closest('[router-href]:not([router-href=""])').getAttribute('router-href'));
+			}
+		}
+	}
 	/** Private. Run the callback for a registered route. */
 	private runRoute(route?: string): void {
 		route = route || window.location.pathname;
@@ -160,11 +161,12 @@ export class Router {
 
 	/** Remove event listeners. For cleanup purposes. */
 	removeEventListeners(): void {
-		if (!Router.addedEventListeners) {
-			return;
-		}
+		// if (!Router.addedEventListeners) {
+		// 	return;
+		// }
 		document.removeEventListener('click', this.handleRouterLinks);
 		document.removeEventListener('keyup', this.handleRouterLinks);
 		window.removeEventListener('popstate', this.handlePopstate);
+		// Router.addedEventListeners = false;
 	}
 }

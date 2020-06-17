@@ -56,12 +56,23 @@ describe('Router', () => {
 	it('Avoid adding multiple identical event listeners when using multiple routers.', () => {
 		const router2 = new Router();
 		const anchor = document.createElement('a');
-		let anchorTriggeredRouter2 = false;
+		let anchorTriggeredRouter = false;
 		anchor.setAttribute('router-href', '/multiplelisteners');
 		document.body.append(anchor);
-		router.get('/multiplelisteners', () => anchorTriggeredRouter2 = !anchorTriggeredRouter2);
+		router.get('/multiplelisteners', () => anchorTriggeredRouter = !anchorTriggeredRouter);
 		anchor.click();
-		expect(anchorTriggeredRouter2).to.be.true;
+		expect(anchorTriggeredRouter).to.be.true;
+	});
+	it('Event listeners should trigger for all instances when using multiple routers.', () => {
+		const router2 = new Router();
+		const anchor = document.createElement('a');
+		let anchorTriggeredRouter = false;
+		anchor.setAttribute('router-href', '/multiplerouters');
+		document.body.append(anchor);
+		router.get('/multiplerouters', () => anchorTriggeredRouter = !anchorTriggeredRouter);
+		router2.get('/multiplerouters', () => anchorTriggeredRouter = !anchorTriggeredRouter);
+		anchor.click();
+		expect(anchorTriggeredRouter).to.be.false;
 	});
 	it('Should support removing event listeners.', () => {
 		const anchor = document.createElement('a');
