@@ -50,6 +50,12 @@ describe('Router', () => {
 		router.navigate('/blog/authors/123');
 		expect(slug).to.equal(123);
 	});
+	it('Should support fallback \'/404\' route.', () => {
+		let changedByRouter = false;
+		router.get('/404', () => changedByRouter = true);
+		router.navigate('/idontexist');
+		expect(changedByRouter).to.be.true;
+	});
 	it('Should support adding event listeners.', () => {
 		const anchor = document.createElement('a');
 		let anchorTriggeredRouter = false;

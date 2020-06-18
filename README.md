@@ -1,5 +1,5 @@
 # Router
-Lightweight client side Javascript router to run certain functions at certain URL routes.
+Lightweight client side JavaScript router to run certain code at certain URL routes.
 
 ## Installation
 ```bash
@@ -18,7 +18,7 @@ const router = new Router();
 
 ### Run callback function at specific route
 ```javascript
-/* log req when route is '/home'. */
+/* Log req when route is '/home'. */
 router.get('/home', (req) => console.log(req));
 
 /* Within non-arrow callbacks, this = the Router instance. */
@@ -28,6 +28,16 @@ router.get('/about', function(req) {
 ```
 
 > Note: A route can only be registered once. Trying to register the same route again will overwrite the previous registration.
+
+### Fallback route
+You might want some code to run when no routes are matched. You can do this by adding a '/404' route.
+
+```javascript
+/* This route will trigger when no routes are matched. */
+router.get('/404', (req) => console.log(req));
+```
+
+> Note: This route will trigger both if no routes are matched or if the current route is '/404'.
 
 ### Route params
 Routes don't have to be static. Just like in Express, you can use route parameters. For all possible syntaxes, see [Route parameters in Express](https://expressjs.com/tr/guide/routing.html#route-parameters).
@@ -170,6 +180,3 @@ npm run publish:npm
 ```
 
 > Note: requires being [logged in to npm locally](https://docs.npmjs.com/cli/adduser).
-
-## TODOs (prioritized order)
-- Check that fallback 404 route works and add tests for it.
