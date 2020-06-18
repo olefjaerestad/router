@@ -11,6 +11,12 @@ describe('Router', () => {
 		router.navigate('/home');
 		expect(changedByRouter).to.be.true;
 	});
+	it('\'get\' method should run registered route immediately if registered route equals current route.', () => {
+		let changedByRouter = false;
+		router.navigate('/');
+		router.get('/', () => changedByRouter = true);
+		expect(changedByRouter).to.be.true;
+	});
 	it('Should support \'delete\' method.', () => {
 		let changedByRouter = false;
 		router.get('/about', () => changedByRouter = true);

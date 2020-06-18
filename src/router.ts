@@ -53,7 +53,7 @@ export class Router {
 	/** Static. Whether event listeners have been added or not. TODO: Maybe we don't need this. */
 	// static addedEventListeners: boolean;
 	/** Private. Current route. */
-	private currentRoute = '';
+	// private currentRoute = '';
 	/** Private. Registered routes. */
 	private routes: {[key: string]: IRouterCallbackObject} = {};
 	/** Private. Add event listeners for popstate and router links `[router-href="/about"]`. */
@@ -83,10 +83,10 @@ export class Router {
 	/** Private. Run the callback for a registered route. */
 	private runRoute(route?: string): void {
 		route = route || window.location.pathname;
-		if ( route === this.currentRoute ) {
-			return;
-		}
-		this.currentRoute = route;
+		// if ( route === this.currentRoute ) {
+		// 	return;
+		// }
+		// this.currentRoute = route;
 		const routeParamValues = route.split('/').slice(1);
 
 		// Try to find matching route.
@@ -150,6 +150,10 @@ export class Router {
 	get(route: string, ...middlewareAndCallback: Array<IRouterCallback>): void {
 		this.routes[route] = {
 			callbacks: middlewareAndCallback.map(middleware => middleware.bind(this)),
+		}
+
+		if (route === window.location.pathname) {
+			this.runRoute(route);
 		}
 	}
 

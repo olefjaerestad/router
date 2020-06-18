@@ -172,5 +172,4 @@ npm run publish:npm
 > Note: requires being [logged in to npm locally](https://docs.npmjs.com/cli/adduser).
 
 ## TODOs (prioritized order)
-- Run Router.runRoute() in constructor? Alternatively, run it in .get() if the registered route === current route?
 - Check that fallback 404 route works and add tests for it.
