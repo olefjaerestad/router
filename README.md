@@ -79,7 +79,7 @@ Stop the execution of further route middleware and the route callback:
 ```javascript
 const authMiddleware = (req) => isLoggedIn();
 
-/* If authMiddleware === false, req won't be logged even if route is '/home'. */
+/* If authMiddleware() === false, req won't be logged even if route is '/home'. */
 router.get('/home', authMiddleware, (req) => console.log(req));
 ```
 
@@ -91,7 +91,7 @@ Middleware and callbacks can also be async, which could be useful when doing thi
 ```javascript
 const authMiddleware = async (req) => await isLoggedIn();
 
-/* If authMiddleware === false, callback won't run even if route is '/home'. */
+/* If authMiddleware() === false, callback won't run even if route is '/home'. */
 router.get('/home', authMiddleware, async (req) => {
 	const result = await getPromise();
 	console.log(result);
@@ -110,7 +110,7 @@ You might've already seen the `req` object being passed to middleware and callba
 router.navigate('/home');
 ```
 
-Router instances also add event listeners to the window and document, so that `[router-href]` elements and browser back/forwards buttons can be used to navigate to routes. Router.removeEventListeners() can be used to cleanup (i.e. remove) these event listeners.
+Router instances also add event listeners to the window and document, so that `[router-href]` elements and browser back/forwards buttons can be used to trigger routes. Router.removeEventListeners() can be used to cleanup (i.e. remove) these event listeners.
 
 ```html
 <!-- Click to navigate to the '/about' route. -->
