@@ -1,27 +1,37 @@
-import {pathToRegexp} from './path-to-regexp';
+import { pathToRegexp } from './path-to-regexp';
 
 export interface IRouterCallback {
 	(req?: {
-		[key: string]: any,
-		route: string, 
+		[key: string]: any;
+		route: string;
 		params: {
-			[key: string]: string|number
+			[key: string]: string | number;
 		},
-	}): unknown
+	}): unknown;
 }
 
 interface IRouterCallbackObject {
 	/** Treat middleware and callback as the same */
-	callbacks: Array<IRouterCallback>,
+	callbacks: Array<IRouterCallback>;
 }
 
 interface IRouterRouteParamKey {
-	name: number,
-	prefix: null|string,
-	delimiter: null|string,
-	optional: boolean,
-	repeat: boolean,
-	pattern: null|string,
+	name: number;
+	prefix: null | string;
+	delimiter: null | string;
+	optional: boolean;
+	repeat: boolean;
+	pattern: null | string;
+}
+
+/**
+ * Loop through callback objects and call their callbacks.
+ */
+const walkCallbackObjects = async (callbackObjects: Array<IRouterCallbackObject>, callback: (i: number, func: Function) => unknown) => {
+	for (let i = 0; i < callbackObjects.length; ++i) {
+		const callbackObject = callbackObjects[i];
+		foreachAsyncCall(callbackObject.callbacks, callback);
+	}
 }
 
 /**
@@ -29,9 +39,9 @@ interface IRouterRouteParamKey {
  * Function calls will wait until previous function has settled.
  * If a function returns false, looping will stop (i.e. break).
  */
-const foreachAsyncCall = async(items: Array<Function>, callback: (i: number, item: any) => unknown) => {
-	for (let i = 0; i < items.length; ++i) {
-		const result = await callback(i, items[i]);
+const foreachAsyncCall = async (funcs: Array<Function>, callback: (i: number, func: Function) => unknown) => {
+	for (let i = 0; i < funcs.length; ++i) {
+		const result = await callback(i, funcs[i]);
 		if (result === false) {
 			break;
 		}
@@ -55,7 +65,7 @@ export class Router {
 	/** Private. Current route. */
 	// private currentRoute = '';
 	/** Private. Registered routes. */
-	private routes: {[key: string]: IRouterCallbackObject} = {};
+	private routes: { [route: string]: Array<IRouterCallbackObject> } = {};
 	/** Private. Add event listeners for popstate and router links `[router-href="/about"]`. */
 	private addEventListeners(): void {
 		// if (Router.addedEventListeners) {
@@ -71,9 +81,11 @@ export class Router {
 		this.runRoute();
 	};
 	/** Private. Handle clicks on router links `[router-href="/about"]`. */
-	private handleRouterLinks = (event: MouseEvent & KeyboardEvent & {path: Array<HTMLElement>}): any => {
-		if (event.type === 'click' || (event.type === 'keyup' && event.key === 'Enter')) {
-			const target = event.path[0];
+	// private handleRouterLinks = (event: MouseEvent & KeyboardEvent & { path: Array<HTMLElement> }): any => {
+	private handleRouterLinks = (event: MouseEvent | KeyboardEvent): any => {
+		if (event.type === 'click' || (event instanceof KeyboardEvent && event.key === 'Enter')) {
+			// const target = event.path[0];
+			const target = event.composedPath()[0] as HTMLElement;
 			if (target && target.closest('[router-href]:not([router-href=""])')) {
 				event.preventDefault();
 				this.navigate(target.closest('[router-href]:not([router-href=""])').getAttribute('router-href'));
@@ -95,9 +107,9 @@ export class Router {
 			const regEx = pathToRegexp(registeredRoute, routeParamKeys);
 
 			// Found matching route
-      if (route.match(regEx)) {
+			if (route.match(regEx)) {
 				// Extract only the route info we need.
-				const routeParams: Array<{key: number, value: string|number}> = routeParamKeys.map(paramKey => {
+				const routeParams: Array<{ key: number, value: string | number }> = routeParamKeys.map(paramKey => {
 					let value: any = routeParamValues[registeredRoute.replace(`(${paramKey.pattern})`, '').split('/').slice(1).indexOf(`:${paramKey.name}`)];
 					// Convert to correct type.
 					if (!isNaN(value)) {
@@ -109,9 +121,9 @@ export class Router {
 					}
 				});
 				// Convert array to object.
-				const routeParamsObj: {[key: string]: string|number} = routeParams.reduce((accumulator: {[key: string]: any}, val: {key: number, value: any}) => {
+				const routeParamsObj: { [key: string]: string | number } = routeParams.reduce((accumulator: { [key: string]: any }, val: { key: number, value: any }) => {
 					accumulator[val.key] = val.value;
-     			return accumulator;
+					return accumulator;
 				}, {});
 				// Run corresponding callbacks then return true to break the loop.
 				if (registeredRoute && this.routes[registeredRoute]) {
@@ -119,7 +131,18 @@ export class Router {
 						route,
 						params: routeParamsObj
 					};
-					foreachAsyncCall(this.routes[registeredRoute].callbacks, async (i, callback) => await callback(req));
+					// foreachAsyncCall(this.routes[registeredRoute].callbacks, async (i, callback) => await callback(req));
+					// foreachAsyncCall(
+					// 	this.routes[registeredRoute].reduce(
+					// 		(acc: Array<IRouterCallback>, callbackObj: IRouterCallbackObject) => [...acc, ...callbackObj.callbacks],
+					// 		[]
+					// 	),
+					// 	async (i, callback) => await callback(req)
+					// );
+					walkCallbackObjects(
+						this.routes[registeredRoute],
+						async (i, callback) => await callback(req)
+					);
 				}
 				return true;
 			}
@@ -128,10 +151,23 @@ export class Router {
 		});
 		// No matching route, try a fallback.
 		if (!hasMatchingRoute && !!this.routes['/404']) {
-			foreachAsyncCall(this.routes['/404'].callbacks, async (i, callback) => await callback({
-				route,
-				params: {}
-			}));
+			// foreachAsyncCall(
+			// 	this.routes['/404'].reduce(
+			// 		(acc: Array<IRouterCallback>, callbackObj: IRouterCallbackObject) => [...acc, ...callbackObj.callbacks],
+			// 		[]
+			// 	),
+			// 	async (i, callback) => await callback({
+			// 		route,
+			// 		params: {}
+			// 	})
+			// );
+			walkCallbackObjects(
+				this.routes['/404'],
+				async (i, callback) => await callback({
+					route,
+					params: {}
+				})
+			);
 		}
 	}
 
@@ -148,9 +184,13 @@ export class Router {
 
 	/** Register route. `Router.get('/home', myMiddleware1, myMiddleware2, myCallback)`. Explicitly return false in middleware to stop execution. Middleware and callback can be async, and must not be arrow functions if you want to have access to the Router instance as `this` within them. */
 	get(route: string, ...middlewareAndCallback: Array<IRouterCallback>): void {
-		this.routes[route] = {
+		// this.routes[route] = {
+		// 	callbacks: middlewareAndCallback.map(middleware => middleware.bind(this)),
+		// }
+		this.routes[route] = this.routes[route] || [];
+		this.routes[route] = [...this.routes[route], {
 			callbacks: middlewareAndCallback.map(middleware => middleware.bind(this)),
-		}
+		}];
 
 		if (route === window.location.pathname) {
 			this.runRoute(route);
@@ -158,7 +198,7 @@ export class Router {
 	}
 
 	/** Navigate to route. */
-	navigate (route: string): void {
+	navigate(route: string): void {
 		window.history.pushState({}, route, window.location.origin + route);
 		this.runRoute(route);
 	}

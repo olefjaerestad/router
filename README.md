@@ -21,13 +21,16 @@ const router = new Router();
 /* Log req when route is '/home'. */
 router.get('/home', (req) => console.log(req));
 
+/* Do additional logging when route is '/home'. Will _not_ overwrite previously registered callbacks for the same route. */
+router.get('/home', (req) => console.log('Another callback at /home'));
+
 /* Within non-arrow callbacks, this = the Router instance. */
 router.get('/about', function(req) {
-	console.log(this);
+	console.log(this); // Router
 });
 ```
 
-> Note: A route can only be registered once. Trying to register the same route again will overwrite the previous registration.
+> Note: You can call `Router.get` on the same route as many times as you need.
 
 ### Fallback route
 You might want some code to run when no routes are matched. You can do this by adding a '/404' route.
@@ -60,7 +63,7 @@ hello
 
 ### Delete route
 ```javascript
-/* Stop running callback function at specific route */
+/* Stop running callback functions for '/home' route. */
 router.delete('/home');
 ```
 
@@ -83,7 +86,9 @@ const authMiddleware = (req) => isLoggedIn();
 router.get('/home', authMiddleware, (req) => console.log(req));
 ```
 
-> Note: middleware will be ran in the order they are passed to `Router.get()`, from left to right.
+> Note: Middleware will be ran in the order they are passed to `Router.get()`, from left to right.
+
+> Note 2: Returning false in a middleware will only affect the callback/middleware that were registered in the same `Router.get()` call as it. Modifying `req` however, will affect callbacks/middleware across all `Router.get()` calls for that route.
 
 ### Async middleware and callbacks
 Middleware and callbacks can also be async, which could be useful when doing things like network requests, authentication, etc.
@@ -98,7 +103,7 @@ router.get('/home', authMiddleware, async (req) => {
 });
 ```
 
-> Note: Async middleware will resolve (be completed) before the next middleware/callback starts executing.
+> Note: Async middleware must resolve (be completed) before the next middleware/callback starts executing.
 
 ### The request object
 You might've already seen the `req` object being passed to middleware and callbacks. This is an object containing information about your current route. The object has the the following properties:
@@ -117,7 +122,7 @@ Router instances also add event listeners to the window and document, so that `[
 <a href="" router-href="/about" title="See info about me">About</a>
 ```
 
-> Note: if `router-href` is empty, the element will be treated as a normal link.
+> Note: If `router-href` is empty, the element will be treated as a normal link.
 
 > Note 2: `router-href` can be used on any element, not just links. Be aware of accessibility concerns if doing this.
 
@@ -179,4 +184,4 @@ Publish to npm:
 npm run publish:npm
 ```
 
-> Note: requires being [logged in to npm locally](https://docs.npmjs.com/cli/adduser).
+> Note: Requires being [logged in to npm locally](https://docs.npmjs.com/cli/adduser).

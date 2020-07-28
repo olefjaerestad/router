@@ -11,6 +11,13 @@ describe('Router', () => {
 		router.navigate('/home');
 		expect(changedByRouter).to.be.true;
 	});
+	it('Should support multiple \'get\' methods to the same route.', () => {
+		let callCount = 0;
+		router.get('/multipleget', () => ++callCount);
+		router.get('/multipleget', () => ++callCount);
+		router.navigate('/multipleget');
+		cy.wrap(callCount).should(val => expect(callCount).to.be.equal(2));
+	});
 	it('\'get\' method should run registered route immediately if registered route equals current route.', () => {
 		let changedByRouter = false;
 		router.navigate('/');
@@ -99,7 +106,7 @@ describe('Router', () => {
 	});
 	it('The Router instance should be available as `this` within non-arrow callbacks.', () => {
 		let thisIsRouter = false;
-		router.get('/this', function() {thisIsRouter = this instanceof Router});
+		router.get('/this', function () { thisIsRouter = this === router });
 		router.navigate('/this');
 		expect(thisIsRouter).to.be.true;
 	});
@@ -118,12 +125,28 @@ describe('Router', () => {
 		router.navigate('/middlewarestop');
 		cy.wrap(changedByRouter).should(val => expect(changedByRouter).to.be.false);
 	});
+	it('Middleware should only stop the execution of callback/middleware that were registered in the same \'get\' call as it.', () => {
+		let callCount = 0;
+		const middleware: IRouterCallback = () => false;
+		router.get('/middlewaresame', middleware, () => ++callCount);
+		router.get('/middlewaresame', () => ++callCount);
+		router.navigate('/middlewaresame');
+		expect(callCount).to.equal(1);
+	});
 	it('Middleware should be able to modify the req object.', () => {
 		let changedByRouter = false;
 		const middleware: IRouterCallback = (req) => req.custom = 'foo';
 		router.get('/middlewaremodifyreq', middleware, (req) => req.custom === 'foo' ? changedByRouter = true : null);
 		router.navigate('/middlewaremodifyreq');
 		cy.wrap(changedByRouter).should(val => expect(changedByRouter).to.be.true);
+	});
+	it('Middleware should be able to modify the req object across \'get\' calls.', () => {
+		let myValue: string | number = '';
+		const middleware: IRouterCallback = (req) => req.params.testValue = 'hello';
+		router.get('/middlewareacrossgets', middleware, () => myValue = 'world');
+		router.get('/middlewareacrossgets', (req) => myValue = req.params.testValue);
+		router.navigate('/middlewareacrossgets');
+		expect(myValue).to.equal('hello');
 	});
 	it('Should support async middleware.', () => {
 		const getPromise = (): Promise<string> => {
